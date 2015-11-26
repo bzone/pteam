@@ -1,49 +1,135 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+/*jshint quotmark: false */
+/*global nfc, ndef, toast, alert, cordova, checkbox, statusDiv, sample */
+
+"use strict";
+
+var android = (cordova.platformId === 'android'),
+    windowsphone = (cordova.platformId === 'windowsphone'),
+    bb10 = (cordova.platformId === 'blackberry10'),
+    sampleData;
+
 var app = {
-    // Application Constructor
-    initialize: function() {
-        this.bindEvents();
+    sampleDataIndex: 0,
+    initialize: function () {
+        this.bind();
     },
-    // Bind Event Listeners
-    //
-    // Bind any events that are required on startup. Common events are:
-    // 'load', 'deviceready', 'offline', and 'online'.
-    bindEvents: function() {
-        document.addEventListener('deviceready', this.onDeviceReady, false);
+    bind: function () {
+        document.addEventListener('deviceready', app.deviceready, false);
     },
-    // deviceready Event Handler
-    //
-    // The scope of 'this' is the event. In order to call the 'receivedEvent'
-    // function, we must explicitly call 'app.receivedEvent(...);'
-    onDeviceReady: function() {
-        app.receivedEvent('deviceready');
+    deviceready: function () {
+        document.getElementById('checkbox').addEventListener('change', app.toggleCheckbox, false);
+        sample.addEventListener('click', app.showSampleData, false);
     },
-    // Update DOM on a Received Event
-    receivedEvent: function(id) {
-        var parentElement = document.getElementById(id);
-        var listeningElement = parentElement.querySelector('.listening');
-        var receivedElement = parentElement.querySelector('.received');
+    disableUI: function () {
+        document.forms[0].elements.mimeType.disabled = true;
+        document.forms[0].elements.payload.disabled = true;
+    },
+    enableUI: function () {
+        document.forms[0].elements.mimeType.disabled = false;
+        document.forms[0].elements.payload.disabled = false;
+    },
+    shareMessage: function () {
+        var mimeType = document.forms[0].elements.mimeType.value,
+            payload = document.forms[0].elements.payload.value,
+            record = ndef.mimeMediaRecord(mimeType, nfc.stringToBytes(payload));
 
-        listeningElement.setAttribute('style', 'display:none;');
-        receivedElement.setAttribute('style', 'display:block;');
+        app.disableUI();
 
-        console.log('Received Event: ' + id);
+        nfc.share(
+            [record],
+            function () {
+                if (bb10) {
+                    // Blackberry calls success as soon as the Card appears
+                    checkbox.checked = false;
+                    app.enableUI();
+                } else if (windowsphone) {
+                    // Windows phone calls success immediately. Bug?
+                    app.notifyUser("Sharing Message");
+                } else {
+                    // Android call the success callback when the message is sent to peer
+                    navigator.notification.vibrate(100);
+                    app.notifyUser("Sent Message to Peer");
+                }
+            }, function (reason) {
+                alert("Failed to share tag " + reason);
+                checkbox.checked = false;
+                app.enableUI();
+            }
+        );
+    },
+    unshareMessage: function () {
+        app.enableUI();
+
+        nfc.unshare(
+            function () {
+                navigator.notification.vibrate(100);
+                app.notifyUser("Message is no longer shared.");
+            }, function (reason) {
+                alert("Failed to unshare message " + reason);
+            }
+        );
+    },
+    notifyUser: function (message) {
+        if (android) {
+            toast.showShort(message);
+        } else {
+            statusDiv.innerHTML = message;
+            setTimeout(function() {
+                statusDiv.innerHTML = "";
+            }, 3000);
+        }
+    },
+    showSampleData: function() {
+        var mimeTypeField = document.forms[0].elements.mimeType,
+          payloadField = document.forms[0].elements.payload,
+          record = sampleData[app.sampleDataIndex];
+
+        if (mimeTypeField.disabled) {
+            app.notifyUser("Unshare Message to edit data");
+            return false;
+        }
+
+        app.sampleDataIndex++;
+        if (app.sampleDataIndex >= sampleData.length) {
+            app.sampleDataIndex = 0;
+        }
+
+        mimeTypeField.value = record.mimeType;
+        payloadField.value = record.payload;
+        return false;
+    },
+    toggleCheckbox: function (e) {
+        if (e.target.checked) {
+            app.shareMessage();
+        } else {
+            app.unshareMessage();
+        }
     }
 };
+
+sampleData = [
+    {
+        mimeType: 'text/pg',
+        payload: 'Hello PhoneGap'
+    },
+    {
+        mimeType: 'game/rockpaperscissors',
+        payload: 'Rock'
+    },
+    {
+        mimeType: 'text/x-vCard',
+        payload: 'BEGIN:VCARD\n' +
+            'VERSION:2.1\n' +
+            'N:Coleman;Don;;;\n' +
+            'FN:Don Coleman\n' +
+            'ORG:Chariot Solutions;\n' +
+            'URL:http://chariotsolutions.com\n' +
+            'TEL;WORK:215-358-1780\n' +
+            'EMAIL;WORK:dcoleman@chariotsolutions.com\n' +
+            'END:VCARD'
+    },
+    {
+        mimeType: '',
+        payload: ''
+    }
+];

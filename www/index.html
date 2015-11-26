@@ -1,211 +1,29 @@
-<!DOCTYPE html>
-<!--
-    Copyright (c) 2012-2014 Adobe Systems Incorporated. All rights reserved.
-
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-     KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
--->
+<!DOCTYPE HTML>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
-        <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
-<link href="http://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
-        <title>Hello World</title>
-    </head>
-    <body>
-        <div class="app">
-            <h1>PhoneGap</h1>
-            <div id="deviceready" class="blink">
-                <p class="event listening">Connecting to Device</p>
-                   <div id="map_canvas" style="width:100%; height:300px; left:0px; top:0px; position:fixed; z-index:99;">
-</div>
-                    <button id="start" style="padding:20px;">NFC cast</button> <br>
-                    <button id="read"  style="padding:20px;">>NFC read</button> <br>
-                <p class="event received" id="geolocation">Device is Ready</p>
-                <img id="avatar" style="width:200px; height:auto;"/>
-            </div>
-        </div>
-        <script type="text/javascript" src="cordova.js"></script>
-        <script type="text/javascript" src="js/index.js"></script>
-        <script type="text/javascript" charset="utf-8">
-
-    // Wait for device API libraries to load
-    //
-    document.addEventListener("deviceready", onDeviceReady, false);
-
-            function GoogleMap(){
- 
-this.initialize = function(){
-var map = showMap();
-}
- 
- var showMap = function(){
-var mapOptions = {
-zoom: 4,
-center: new google.maps.LatLng(-33, 151),
-mapTypeId: google.maps.MapTypeId.ROADMAP
-}
- 
-var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
- 
-return map;
-}
-}
-            
-            
-            
-            
-    // device APIs are available
-    //
-    function onDeviceReady() {
-        navigator.geolocation.getCurrentPosition(onSuccess, onError);
-        var map = new GoogleMap();
-    map.initialize();
-    }
-            
-            
-            
-
-    // onSuccess Geolocation
-    //
-    function onSuccess(position) {
-        var element = document.getElementById('geolocation');
-        element.innerHTML = 'Latitude: '           + position.coords.latitude              + '<br />' +
-                            'Longitude: '          + position.coords.longitude             + '<br />' +
-                            'Altitude: '           + position.coords.altitude              + '<br />' +
-                            'Accuracy: '           + position.coords.accuracy              + '<br />' +
-                            'Altitude Accuracy: '  + position.coords.altitudeAccuracy      + '<br />' +
-                            'Heading: '            + position.coords.heading               + '<br />' +
-                            'Speed: '              + position.coords.speed                 + '<br />' +
-                            'Timestamp: '          + position.timestamp                    + '<br />';
-    }
-
-    // onError Callback receives a PositionError object
-    //
-    function onError(error) {
-        alert('code: '    + error.code    + '\n' +
-              'message: ' + error.message + '\n');
-    }
-            
-            
-              // Called when capture operation is finished
-    //
-    function captureSuccess(mediaFiles) {
-        var i, len;
-        for (i = 0, len = mediaFiles.length; i < len; i += 1) {
-            alert(mediaFiles[i].name);
-            alert(mediaFiles[i].fullPath);
-            var obrazek = document.getElementById('avatar');
-            obrazek.src = mediaFiles[i].fullPath;
-        }
-    }
-            
-        var startCast = document.getElementById('start');
-            startCast.addEventListener('click',sendNFCStart, false);
-            
-             var startRead = document.getElementById('read');
-            startRead.addEventListener('click',readNFCStart, false);
-         
-            
-var message = [
-    ndef.textRecord("hello, world")
-];
-
-            
-  function sendNFCStart() {          
-            alert('sending');
-            nfc.share(message, sendNFC, sendNFCError); 
-  }
-  
-function sendNFC() {
-    alert('przesłano poprawnie');
-}
-            
-            
-            function sendNFCError() {
-    alert('nie przesłano');
-}
-            
-            
-          
-            
-            
-          function readNFCStart() {  
-    alert('onn');
-            nfc.addNdefListener(callbackNFC, nfcReadOk, nfcReadFalse);
-          }
-            
-              function callbackNFC() {
-   alert('odebrano');
-        alert(ndef.textRecord);
-}
-            
-        function nfcReadOk() {
-             alert('odebrano');
-        alert(ndef.textRecord);
-        }
-            
-            function nfcReadFalse() {
-             alert('nie odebrano');
-        }
-            
-
-    // Called if something bad happens.
-    //
-    function captureError(error) {
-        var msg = 'An error occurred during capture: ' + error.code;
-        navigator.notification.alert(msg, null, 'Uh oh!');
-    }
-
-    // A button will call this function
-    //
-    function captureImage() {
-        // Launch device camera application,
-        // allowing user to capture up to 2 images
-        navigator.device.capture.captureImage(captureSuccess, captureError, {limit: 2});
-    }
-
-    // Upload files to server
-    function uploadFile(mediaFile) {
-        var ft = new FileTransfer(),
-            path = mediaFile.fullPath,
-            name = mediaFile.name;
-
-        ft.upload(path,
-            "http://my.domain.com/upload.php",
-            function(result) {
-                console.log('Upload success: ' + result.responseCode);
-                console.log(result.bytesSent + ' bytes sent');
-            },
-            function(error) {
-                console.log('Error uploading file ' + path + ': ' + error.code);
-            },
-            { fileName: name });
-    }
-            
-
+  <head>
+    <meta name="viewport" content="width=320, user-scalable=no" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>PhoneGap Peer to Peer Demo</title>
+      <link rel="stylesheet" href="css/index.css" type="text/css" media="screen" title="no title" charset="utf-8">
+  </head>
+  <body>
+    <h1>PhoneGap NFC P2P</h1>
+    <form>
+      Mime Type:<br/>
+      <input type="text" name="mimeType" value="text/pg" size="30" /><br/>
+      Payload:<br/>      
+      <textarea name="payload" rows="10" cols="30">hello, world</textarea>
+        <br/>
+        <input type="checkbox" name="share" id="checkbox" value="Share"/><label for="checkbox">Share Message</label>        
+    </form>
+    <p>
+        <a href="#" id="sample">Sample Data</a>
+    </p>
+    <div id="statusDiv"></div>
+    <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/index.js"></script>
+    <script type="text/javascript">
+        app.initialize();
     </script>
-        <script type="text/javascript">
-            app.initialize();
-        </script>
-    </body>
+  </body>
 </html>
