@@ -126,32 +126,47 @@ return map;
             startRead.addEventListener('click',readNFCStart, false);
          
             
-    var message = [
-    ndef.textRecord("hello, world"),
-    ndef.uriRecord("http://github.com/chariotsolutions/phonegap-nfc")
+var message = [
+    ndef.textRecord("hello, world")
 ];
 
             
   function sendNFCStart() {          
             alert('sending');
-nfc.share(message, sendNFC, captureError); 
+            nfc.share(message, sendNFC, sendNFCError); 
   }
   
 function sendNFC() {
-    alert('przesłano');
+    alert('przesłano poprawnie');
 }
             
             
-            function callbackNFC() {
-    alert('przesłano');
+            function sendNFCError() {
+    alert('nie przesłano');
 }
+            
+            
+          
             
             
           function readNFCStart() {  
     alert('onn');
-            nfc.addNdefListener(callbackNFC, sendNFC, sendNFC);
+            nfc.addNdefListener(callbackNFC, nfcReadOk, nfcReadFalse);
           }
             
+              function callbackNFC() {
+   alert('odebrano');
+        alert(ndef.textRecord);
+}
+            
+        function nfcReadOk() {
+             alert('odebrano');
+        alert(ndef.textRecord);
+        }
+            
+            function nfcReadFalse() {
+             alert('nie odebrano');
+        }
             
 
     // Called if something bad happens.
